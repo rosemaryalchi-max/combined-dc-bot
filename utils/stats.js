@@ -65,18 +65,82 @@ function addPredictionWin(guildId, userId, earnings) {
 }
 
 /**
+ * Claim daily reward.
+ * Returns object with status: 'success', 'cooldown', 'reset' and details.
+ */
+function claimDaily(guildId, userId) {
+    if (!stats[guildId]) stats[guildId] = {};
+    if (!stats[guildId][userId]) stats[guildId][userId] = {
+        messages: { count: 0, week: getWeekNumber() },
+        predictions: { wins: 0, earnings: 0 },
+        daily: { streak: 0, lastClaim: 0 },
+        quiz: { points: 0 }
+    };
+
+    // Ensure nested objects exist (migration safe)
+    if (!stats[guildId][userId].daily) stats[guildId][userId].daily = { streak: 0, lastClaim: 0 };
+    if (!stats[guildId][userId].quiz) stats[guildId][userId].quiz = { points: 0 };
+
+    const userStats = stats[guildId][userId];
+    const now = Date.now();
+    const lastClaim = userStats.daily.lastClaim;
+    const OneDay = 24 * 60 * 60 * 1000;
+
+    // Cooldown check
+    if (now - lastClaim < OneDay) {
+        return { status: 'cooldown', remaining: OneDay - (now - lastClaim) };
+    }
+
+    // Streak logic
+    let streak = userStats.daily.streak;
+    // If more than 48 hours (2 days) passed, reset streak
+    if (now - lastClaim > OneDay * 2 && lastClaim !== 0) {
+        streak = 1; // Reset to 1 (current claim)
+    } else {
+        streak++;
+    }
+
+    userStats.daily.streak = streak;
+    userStats.daily.lastClaim = now;
+    saveStats();
+
+    return { status: 'success', streak };
+}
+
+/**
+ * Add points from quiz.
+ */
+function addQuizPoints(guildId, userId, points) {
+    if (!stats[guildId]) stats[guildId] = {};
+    if (!stats[guildId][userId]) stats[guildId][userId] = { messages: { count: 0, week: getWeekNumber() }, predictions: { wins: 0, earnings: 0 } };
+
+    if (!stats[guildId][userId].quiz) stats[guildId][userId].quiz = { points: 0 };
+
+    stats[guildId][userId].quiz.points += points;
+    saveStats();
+}
+
+/**
  * Get stats for a user.
  */
 function getStats(guildId, userId) {
     if (!stats[guildId] || !stats[guildId][userId]) {
         return {
             messages: { count: 0, week: getWeekNumber() },
-            predictions: { wins: 0, earnings: 0 }
+            predictions: { wins: 0, earnings: 0 },
+            daily: { streak: 0, lastClaim: 0 },
+            quiz: { points: 0 }
         };
     }
 
     // Check week reset on read too
     const userStats = stats[guildId][userId];
+
+    // Auto-migrate structure if missing
+    if (!userStats.predictions) userStats.predictions = { wins: 0, earnings: 0 };
+    if (!userStats.daily) userStats.daily = { streak: 0, lastClaim: 0 };
+    if (!userStats.quiz) userStats.quiz = { points: 0 };
+
     if (userStats.messages.week !== getWeekNumber()) {
         userStats.messages.count = 0;
         userStats.messages.week = getWeekNumber();
@@ -86,4 +150,4 @@ function getStats(guildId, userId) {
     return userStats;
 }
 
-module.exports = { addMessage, addPredictionWin, getStats };
+module.exports = { addMessage, addPredictionWin, claimDaily, addQuizPoints, getStats };

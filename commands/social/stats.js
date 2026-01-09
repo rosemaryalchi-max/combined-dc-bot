@@ -31,7 +31,8 @@ module.exports = {
                 embed.setDescription('**Quick Stats**')
                     .addFields(
                         { name: '💬 Messages (Week)', value: `${stats.messages.count}`, inline: true },
-                        { name: '🎯 Prediction Wins', value: `${stats.predictions.wins}`, inline: true },
+                        { name: '🔥 Daily Streak', value: `${stats.daily?.streak || 0}`, inline: true },
+                        { name: '🧠 Quiz Points', value: `${stats.quiz?.points || 0}`, inline: true },
                         { name: '📈 MEE6 Level', value: mee6Data ? `${mee6Data.level}` : 'N/A', inline: true }
                     );
             } else if (tab === 'messages') {
@@ -40,6 +41,12 @@ module.exports = {
             } else if (tab === 'predictions') {
                 embed.setTitle(`🎯 Prediction Game Stats`)
                     .setDescription(`**Prediction Performance**\n\n🏆 Total Wins: **${stats.predictions.wins}**\n\n*Participate in /guess games to increase your wins!*`);
+            } else if (tab === 'streak') {
+                embed.setTitle(`🔥 Daily Streak`)
+                    .setDescription(`**Current Streak: ${stats.daily?.streak || 0} Days**\n\n*Use /daily every 24h to keep it going!*`);
+            } else if (tab === 'quiz') {
+                embed.setTitle(`🧠 Quiz Stats`)
+                    .setDescription(`**Total Quiz Points: ${stats.quiz?.points || 0}**\n\n*Earn 10 points for every correct /quiz answer!*`);
             } else if (tab === 'mee6') {
                 embed.setTitle(`📈 MEE6 Integration`)
                     .setDescription('**Level & XP Data synced from MEE6**')
@@ -57,12 +64,22 @@ module.exports = {
         const row = new ActionRowBuilder()
             .addComponents(
                 new ButtonBuilder().setCustomId('stats_overview').setLabel('Overview').setStyle(ButtonStyle.Primary).setEmoji('🏠'),
-                new ButtonBuilder().setCustomId('stats_messages').setLabel('Messages').setStyle(ButtonStyle.Secondary).setEmoji('💬'),
-                new ButtonBuilder().setCustomId('stats_predictions').setLabel('Predictions').setStyle(ButtonStyle.Secondary).setEmoji('🎯'),
+                new ButtonBuilder().setCustomId('stats_streak').setLabel('Streak').setStyle(ButtonStyle.Secondary).setEmoji('🔥'),
+                new ButtonBuilder().setCustomId('stats_quiz').setLabel('Quiz').setStyle(ButtonStyle.Secondary).setEmoji('🧠'),
                 new ButtonBuilder().setCustomId('stats_mee6').setLabel('MEE6').setStyle(ButtonStyle.Secondary).setEmoji('📈'),
             );
 
-        const response = await interaction.editReply({ embeds: [generateEmbed('overview')], components: [row] });
+        // Overflow row for less important ones if needed, or just swap
+        // For now, removing 'Messages' and 'Predictions' from main row to fit Streak/Quiz or using 2 rows.
+        // Let's use 2 rows to fit everything comfortably.
+
+        const row2 = new ActionRowBuilder()
+            .addComponents(
+                new ButtonBuilder().setCustomId('stats_messages').setLabel('Messages').setStyle(ButtonStyle.Secondary).setEmoji('💬'),
+                new ButtonBuilder().setCustomId('stats_predictions').setLabel('Predictions').setStyle(ButtonStyle.Secondary).setEmoji('🎯'),
+            );
+
+        const response = await interaction.editReply({ embeds: [generateEmbed('overview')], components: [row, row2] });
 
         // Collector
         const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60000 });
@@ -73,16 +90,18 @@ module.exports = {
             const tab = i.customId.replace('stats_', '');
 
             // Update button styles
-            row.components.forEach(btn => {
-                btn.setStyle(btn.data.custom_id === i.customId ? ButtonStyle.Primary : ButtonStyle.Secondary);
+            [row, row2].forEach(r => {
+                r.components.forEach(btn => {
+                    btn.setStyle(btn.data.custom_id === i.customId ? ButtonStyle.Primary : ButtonStyle.Secondary);
+                });
             });
 
-            await i.update({ embeds: [generateEmbed(tab)], components: [row] });
+            await i.update({ embeds: [generateEmbed(tab)], components: [row, row2] });
         });
 
         collector.on('end', () => {
-            row.components.forEach(btn => btn.setDisabled(true));
-            interaction.editReply({ components: [row] }).catch(() => { });
+            [row, row2].forEach(r => r.components.forEach(btn => btn.setDisabled(true)));
+            interaction.editReply({ components: [row, row2] }).catch(() => { });
         });
     },
 };

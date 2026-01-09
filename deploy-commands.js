@@ -36,9 +36,14 @@ const rest = new REST({ version: '10' }).setToken(token);
     try {
         console.log(`Started refreshing ${commands.length} application (/) commands.`);
 
-        // If GUILD_ID is present, deploy to guild (faster for dev), else global
+        // If GUILD_ID is present, deploy to guild (faster for dev) AND clear global commands to avoid duplicates.
         if (GUILD_IDS.length > 0) {
             console.log(`Deploying to ${GUILD_IDS.length} guild(s)...`);
+
+            // Clear Global Commands first to ensure no duplicates if we are switching to Guild-only
+            console.log('Clearing global commands...');
+            await rest.put(Routes.applicationCommands(clientId), { body: [] });
+
             for (const id of GUILD_IDS) {
                 try {
                     console.log(`Deploying to ${id}...`);
@@ -52,6 +57,7 @@ const rest = new REST({ version: '10' }).setToken(token);
                 }
             }
         } else {
+            // Deploy Globally (and potentially clear guild commands if we wanted to be thorough, but unlikely needed)
             await rest.put(
                 Routes.applicationCommands(clientId),
                 { body: commands },

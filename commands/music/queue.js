@@ -7,7 +7,7 @@ module.exports = {
         .setDescription('Show the current queue'),
     async execute(interaction) {
         if (!musicManager.validateChannel(interaction)) {
-            return interaction.reply({ content: '❌ Please use a **Voice Channel** chat or the configured music channel.', ephemeral: true });
+            return interaction.reply({ content: '❌ Invalid channel! Use Text-in-Voice or the configured music channel.', ephemeral: true });
         }
 
         const state = musicManager.getGuildState(interaction.guildId);
