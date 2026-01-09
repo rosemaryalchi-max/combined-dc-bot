@@ -1,8 +1,17 @@
 require('dotenv').config();
 
+// Helper to extract Client ID from Token
+function getClientIdFromToken(token) {
+    try {
+        const idPart = token.split('.')[0];
+        const buff = Buffer.from(idPart, 'base64');
+        return buff.toString('ascii');
+    } catch { return null; }
+}
+
 const config = {
     token: process.env.DISCORD_TOKEN,
-    clientId: process.env.CLIENT_ID,
+    clientId: process.env.CLIENT_ID || getClientIdFromToken(process.env.DISCORD_TOKEN),
     guildId: process.env.GUILD_ID, // Useful for dev/testing
 };
 

@@ -1,0 +1,87 @@
+<%- include('partials/header', { user: user }) %>
+
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <%- include('partials/sidebar', { guild: guild, active: 'levels' }) %>
+
+            <!-- Content -->
+            <div class="flex-1 p-10 bg-discord-gray overflow-y-auto h-screen">
+                <div class="max-w-6xl mx-auto">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <h1 class="text-3xl font-bold text-white mb-2">Levelling</h1>
+                            <p class="text-gray-400">Leaderboard data synced from MEE6.</p>
+                        </div>
+                        <div class="text-right">
+                            <a href="https://mee6.xyz/dashboard/<%= guild.id %>/leaderboard" target="_blank"
+                                class="text-discord-blurple hover:underline text-sm font-bold">
+                                View on MEE6 &rarr;
+                            </a>
+                        </div>
+                    </div>
+
+                    <% if (!leaderboard || !leaderboard.players || leaderboard.players.length===0) { %>
+                        <div class="bg-discord-dark rounded-lg p-10 text-center">
+                            <h2 class="text-xl text-white font-bold mb-2">No Data Found</h2>
+                            <p class="text-gray-400 mb-4">Could not fetch MEE6 leaderboard. Make sure it is set to
+                                <b>Public</b>.</p>
+                            <a href="/dashboard/<%= guild.id %>/levels"
+                                class="bg-discord-blurple px-4 py-2 rounded text-white font-bold">Retry</a>
+                        </div>
+                        <% } else { %>
+                            <div class="bg-discord-dark rounded-lg shadow-lg overflow-hidden">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr
+                                            class="bg-discord-darker text-gray-400 text-xs uppercase border-b border-gray-700">
+                                            <th class="p-4">Rank</th>
+                                            <th class="p-4">User</th>
+                                            <th class="p-4">Level</th>
+                                            <th class="p-4">XP</th>
+                                            <th class="p-4 text-right">Messages</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="text-gray-300">
+                                        <% leaderboard.players.forEach((player, index)=> { %>
+                                            <tr class="border-b border-gray-700 hover:bg-gray-700/30 transition">
+                                                <td class="p-4 font-mono font-bold text-discord-blurple">#<%= index + 1
+                                                        %>
+                                                </td>
+                                                <td class="p-4 flex items-center gap-3">
+                                                    <% if (player.avatar) { %>
+                                                        <img src="https://cdn.discordapp.com/avatars/<%= player.id %>/<%= player.avatar %>.png"
+                                                            class="w-8 h-8 rounded-full">
+                                                        <% } else { %>
+                                                            <div class="w-8 h-8 bg-gray-600 rounded-full"></div>
+                                                            <% } %>
+                                                                <span class="font-bold text-white">
+                                                                    <%= player.username %>
+                                                                </span>
+                                                                <% if (player.discriminator && player.discriminator
+                                                                    !=='0' ) { %>
+                                                                    <span class="text-gray-500 text-xs">#<%=
+                                                                            player.discriminator %></span>
+                                                                    <% } %>
+                                                </td>
+                                                <td class="p-4">
+                                                    <span
+                                                        class="bg-discord-blurple/20 text-discord-blurple px-2 py-1 rounded text-xs font-bold">LVL
+                                                        <%= player.level %></span>
+                                                </td>
+                                                <td class="p-4 text-sm font-mono">
+                                                    <%= player.xp.toLocaleString() %>
+                                                </td>
+                                                <td class="p-4 text-right text-sm text-gray-500">
+                                                    <%= player.message_count.toLocaleString() %>
+                                                </td>
+                                            </tr>
+                                            <% }) %>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <% } %>
+                </div>
+            </div>
+    </div>
+
+    <%- include('partials/footer') %>

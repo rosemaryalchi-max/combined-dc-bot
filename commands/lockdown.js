@@ -1,5 +1,5 @@
-const { SlashCommandBuilder, PermissionFlagsBits, TextChannel } = require('discord.js');
-const { sendLog } = require('../utils/logger');
+const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const { lockdown } = require('../modules/SecurityManager');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -14,29 +14,8 @@ module.exports = {
         await interaction.deferReply({ ephemeral: true });
 
         try {
-            const channels = guild.channels.cache.filter(c => c instanceof TextChannel);
-            let updatedCount = 0;
-
-            for (const [id, channel] of channels) {
-                try {
-                    await channel.permissionOverwrites.edit(guild.id, {
-                        SendMessages: !state
-                    });
-                    updatedCount++;
-                } catch (e) {
-                    console.error(`Failed to lock channel ${channel.name}: ${e.message}`);
-                }
-            }
-
-            const title = state ? '🚨 SERVER LOCKED DOWN 🚨' : '✅ SERVER UNLOCKED';
-            const description = state
-                ? `Emergency lockdown initiated by ${interaction.user}. Channels locked: ${updatedCount}.`
-                : `Lockdown lifted by ${interaction.user}. Channels unlocked.`;
-            const color = state ? 'DarkRed' : 'Green';
-
-            await interaction.editReply({ content: description });
-            await sendLog(interaction.client, guild.id, title, description, color);
-
+            const result = await lockdown(guild, state, `Manual action by ${interaction.user.tag}`);
+            await interaction.editReply({ content: result.description });
         } catch (error) {
             console.error(error);
             await interaction.editReply({ content: 'Failed to execute lockdown.' });

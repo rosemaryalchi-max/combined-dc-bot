@@ -96,17 +96,29 @@ module.exports = {
         if (joinLog.length >= JOIN_LIMIT) {
             if (!raidMode) {
                 raidMode = true;
+
+                // Config Check
+                const { getGuildConfig } = require('../utils/guildConfig');
+                const config = getGuildConfig(member.guild.id);
+                const panicEnabled = config.panic?.enabled || false;
+
                 // Log Raid Detection
                 await sendLog(
                     member.client,
                     member.guild.id,
                     '🚨 RAID DETECTED 🚨',
-                    `High volume of joins detected: ${joinLog.length} users in ${TIME_WINDOW_MS / 1000} seconds.`,
+                    `High volume of joins detected: ${joinLog.length} users in ${TIME_WINDOW_MS / 1000} seconds.${panicEnabled ? ' **PANIC MODE ACTIVATED**' : ''}`,
                     'Red'
                 );
 
-                // Here you would implement lockdown logic, e.g. disabling invites or verification level increase
-                // For this demo, we just log it.
+                if (panicEnabled) {
+                    const { lockdown } = require('../modules/SecurityManager');
+                    await lockdown(member.guild, true, 'Auto-Panic (Raid Detected)');
+                    try {
+                        const channel = member.guild.channels.cache.find(ch => ch.name === 'general' || ch.name === 'announcements');
+                        if (channel) channel.send('@everyone 🚨 **SERVER LOCKED DOWN** due to suspicious activity. Staff are investigating.');
+                    } catch (e) { }
+                }
 
                 // Reset raid mode after 1 minute
                 setTimeout(() => { raidMode = false; }, 60000);
@@ -114,18 +126,48 @@ module.exports = {
         }
 
         // --- WELCOME MESSAGE ---
+        // --- WELCOME MESSAGE ---
         try {
-            const channel = member.guild.channels.cache.find(ch => ch.name === 'general' || ch.name === 'welcome');
-            if (channel) {
-                const { EmbedBuilder } = require('discord.js');
-                const embed = new EmbedBuilder()
-                    .setTitle(`Welcome to ${member.guild.name}!`)
-                    .setDescription(`Hello ${member}! You are the **${member.guild.memberCount}th** member.`)
-                    .setThumbnail(member.user.displayAvatarURL())
-                    .setColor('Random')
-                    .setTimestamp();
+            const { getGuildConfig } = require('../utils/guildConfig');
+            const config = getGuildConfig(member.guild.id);
+            const channelId = config.welcomeChannelId;
 
-                await channel.send({ embeds: [embed] });
+            // Fallback to searching by name if config not set
+            const channel = channelId
+                ? member.guild.channels.cache.get(channelId)
+                : member.guild.channels.cache.find(ch => ch.name === 'general' || ch.name === 'welcome');
+
+            if (channel) {
+                // Check if Card is enabled
+                if (config.welcome?.card?.enabled) {
+                    const { generateWelcomeCard } = require('../utils/welcomeCard');
+                    const { AttachmentBuilder } = require('discord.js');
+
+                    const theme = config.welcome.card.theme || 'gaming';
+                    const title = config.welcome.card.title || 'Welcome inside {server}';
+                    const text = config.welcome.card.text || 'Have a nice stay {user}';
+
+                    const buffer = await generateWelcomeCard(member, theme, title, text);
+                    const attachment = new AttachmentBuilder(buffer, { name: 'welcome.png' });
+
+                    // Send a simple ping + the card
+                    await channel.send({
+                        content: `Welcome <@${member.id}>!`,
+                        files: [attachment]
+                    });
+
+                } else {
+                    // Legacy Embed Fallback
+                    const { EmbedBuilder } = require('discord.js');
+                    const embed = new EmbedBuilder()
+                        .setTitle(`Welcome to ${member.guild.name}!`)
+                        .setDescription(`Hello ${member}! You are the **${member.guild.memberCount}th** member.`)
+                        .setThumbnail(member.user.displayAvatarURL())
+                        .setColor('Random')
+                        .setTimestamp();
+
+                    await channel.send({ embeds: [embed] });
+                }
             }
         } catch (e) {
             console.error('Welcome message error:', e);

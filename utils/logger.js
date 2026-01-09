@@ -51,13 +51,22 @@ const out = (level, ...args) => {
  * @param {string} guildId - The ID of the guild where the log should be sent.
  */
 async function sendLog(client, guildId, title, description, color = 'Blue') {
-    // In a real app, you'd fetch logging channel ID from a database.
-    // For now, we'll try to find a channel named 'mod-logs' or 'security-logs'.
     try {
+        const { getGuildConfig } = require('./guildConfig');
         const guild = await client.guilds.fetch(guildId);
         if (!guild) return;
 
-        const channel = guild.channels.cache.find(c => c.name === 'mod-logs' || c.name === 'security-logs');
+        const config = getGuildConfig(guildId);
+        let channel;
+
+        if (config.logChannelId) {
+            channel = guild.channels.cache.get(config.logChannelId);
+        }
+
+        // Fallback to legacy behavior if not configured
+        if (!channel) {
+            channel = guild.channels.cache.find(c => c.name === 'mod-logs' || c.name === 'security-logs');
+        }
 
         if (channel && channel.isTextBased()) {
             const embed = new EmbedBuilder()

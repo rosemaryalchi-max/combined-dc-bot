@@ -9,11 +9,19 @@ const SPAM_LIMIT = 5;
 const TIME_WINDOW = 5000; // 5 seconds
 const MUTE_DURATION = 60000; // 60 seconds
 
+const { addMessage } = require('../utils/stats');
+
 module.exports = {
-    name: Events.MessageCreate,
-    async execute(message) {
+    name: 'messageCreate',
+    async execute(message, client) {
         if (message.author.bot) return;
 
+        // Track Stats
+        if (message.guild) {
+            addMessage(message.guild.id, message.author.id);
+        }
+
+        const { getGuildConfig } = require('../utils/guildConfig');
         // Auto-Mod Check (Bad Words, Caps)
         if (await checkAutomod(message)) return; // Stop if deleted
 

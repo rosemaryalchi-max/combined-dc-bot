@@ -7,35 +7,32 @@ const http = require('http');
 
 // --- MERGED MODULES ---
 const { info, ok, warn, err } = require('./utils/logger');
-const { musicCommands, onClientReadyMusic, handleInteractionMusic, guildStates } = require('./modules/music');
 const { setupRoleBuckets } = require('./modules/roleBuckets');
-const { giveawayCommands, handleInteractionGiveaway } = require('./modules/giveaway');
 const { adminCommands, handleInteractionAdmin } = require('./modules/adminUtils');
-const { registerAllSlashCommands } = require('./commands/register'); // Note: You might need to copy this file too if you haven't
+const { registerAllSlashCommands } = require('./utils/register'); // Note: You might need to copy this file too if you haven't
 
 // Error Handling
 process.on('unhandledRejection', (e) => err('Unhandled rejection:', e));
 process.on('uncaughtException', (e) => err('Uncaught exception:', e));
 
+// Cleanup ytdl-core debug files
+const cleanupDebugFiles = () => {
+    try {
+        const files = fs.readdirSync(__dirname);
+        const debugFiles = files.filter(f => f.match(/^\d+-player-script\.js$/));
+        if (debugFiles.length > 0) {
+            debugFiles.forEach(f => fs.unlinkSync(path.join(__dirname, f)));
+            console.log(`[Cleanup] Removed ${debugFiles.length} temporary player-script files.`);
+        }
+    } catch (e) {
+        console.error('[Cleanup] Failed to clean debug files:', e);
+    }
+};
+
 let isReady = false;
 
-// Health Server
-const healthServer = http.createServer((req, res) => {
-    const path = (req.url || '').split('?')[0];
-    if (req.method === 'GET' && path === '/health') {
-        res.statusCode = isReady ? 200 : 503;
-        res.setHeader('content-type', 'text/plain');
-        res.end(isReady ? 'ok' : 'starting');
-        return;
-    }
-    res.statusCode = 404;
-    res.setHeader('content-type', 'text/plain');
-    res.end('not found');
-});
-healthServer.on('error', (e) => warn('Health server error: ' + (e?.message || e)));
-healthServer.listen(config.HEALTH_PORT, config.HEALTH_BIND, () => {
-    info(`Health check listening on ${config.HEALTH_BIND}:${config.HEALTH_PORT}`);
-});
+// Health Server (Legacy removed in favor of Dashboard)
+// const healthServer = http.createServer(...)
 
 const client = new Client({
     intents: [
@@ -52,11 +49,26 @@ const client = new Client({
 client.commands = new Collection();
 
 // Load Commands
+// Load Commands (Recursive)
 const commandsPath = path.join(__dirname, 'commands');
+const getFilesRecursively = (dir) => {
+    let results = [];
+    const list = fs.readdirSync(dir);
+    list.forEach(file => {
+        const filePath = path.join(dir, file);
+        const stat = fs.statSync(filePath);
+        if (stat && stat.isDirectory()) {
+            results = results.concat(getFilesRecursively(filePath));
+        } else if (file.endsWith('.js')) {
+            results.push(filePath);
+        }
+    });
+    return results;
+};
+
 if (fs.existsSync(commandsPath)) {
-    const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
-    for (const file of commandFiles) {
-        const filePath = path.join(commandsPath, file);
+    const commandFiles = getFilesRecursively(commandsPath);
+    for (const filePath of commandFiles) {
         const command = require(filePath);
         if ('data' in command && 'execute' in command) {
             client.commands.set(command.data.name, command);
@@ -95,7 +107,13 @@ client.once(Events.ClientReady, async c => {
     ok(`${c.user.tag} is online.`);
 
     // Initialize Music
-    await onClientReadyMusic(client);
+    // await onClientReadyMusic(client);
+
+    // Initialize Giveaway
+    require('./modules/GiveawayManager').setClient(c);
+
+    // Run Cleanup
+    cleanupDebugFiles();
 
     // Initial Security Logs Setup (Existing)
     c.guilds.cache.forEach(async guild => {
@@ -127,5 +145,9 @@ client.once(Events.ClientReady, async c => {
 });
 
 // Interaction handling is managed by events/interactionCreate.js
+
+// Initialize Dashboard
+const dashboard = require('./dashboard/app');
+dashboard(client);
 
 client.login(config.token);

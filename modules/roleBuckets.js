@@ -2,11 +2,12 @@ const { Events, GatewayIntentBits, Partials } = require('discord.js');
 const { VERIFIED_ROLE_ID_OR_NAME, ROLE_BUCKETS } = require('../config');
 const logger = require('../utils/logger');
 const info = logger?.info || ((...a) => console.log('ℹ️', ...a));
-const ok   = logger?.ok   || ((...a) => console.log('✅', ...a));
+const ok = logger?.ok || ((...a) => console.log('✅', ...a));
 const warn = logger?.warn || ((...a) => console.warn('⚠️', ...a));
-const err  = logger?.err  || ((...a) => console.error('❌', ...a));
+const err = logger?.err || ((...a) => console.error('❌', ...a));
 
 
+const warnedMissing = new Set();
 const isSnowflake = (s) => typeof s === 'string' && /^\d{17,20}$/.test(s);
 async function resolveRole(guild, idOrName) {
   try {
@@ -47,7 +48,14 @@ async function assignBucketIfVerified(member, reason = 'Bucket assignment') {
     if (!bucket) return false;
 
     const targetRole = await resolveRole(member.guild, ROLE_BUCKETS[bucket]);
-    if (!targetRole) { warn(`[${member.guild.name}] Target role for ${bucket} not found. Create it or set ROLE_${bucket}_ID in .env`); return false; }
+    if (!targetRole) {
+      const warnKey = `${member.guild.id}-${bucket}`;
+      if (!warnedMissing.has(warnKey)) {
+        warn(`[${member.guild.name}] Target role for ${bucket} not found. Create it or set ROLE_${bucket}_ID in .env (suppressing further warnings for this bucket)`);
+        warnedMissing.add(warnKey);
+      }
+      return false;
+    }
 
     const allGroup = await resolveAllGroupRoles(member.guild);
     const rolesToRemove = allGroup.filter(({ bucket: b, role }) => role && b !== bucket && member.roles.cache.has(role.id)).map(({ role }) => role.id);

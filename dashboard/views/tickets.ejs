@@ -1,0 +1,111 @@
+<%- include('partials/header', { user: user }) %>
+
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <%- include('partials/sidebar', { guild: guild, active: 'tickets' }) %>
+
+            <!-- Content -->
+            <div class="flex-1 p-10 bg-discord-gray">
+                <div class="max-w-4xl mx-auto">
+                    <h1 class="text-3xl font-bold text-white mb-2">Ticket System</h1>
+                    <p class="text-gray-400 mb-8">Manage support tickets and transcripts.</p>
+
+                    <form action="/dashboard/<%= guild.id %>/tickets" method="POST" class="space-y-6">
+
+                        <!-- Ticketing Configuration -->
+                        <div class="bg-discord-dark rounded-lg p-6 shadow-md border-l-4 border-discord-green">
+                            <h2 class="text-xl font-bold mb-4 text-white">General Settings</h2>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Support Role -->
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Support
+                                        Role</label>
+                                    <select name="ticketSupportRoleId"
+                                        class="w-full bg-discord-darker text-white p-3 rounded border border-gray-700 focus:border-discord-blurple focus:outline-none">
+                                        <option value="">-- Select Role --</option>
+                                        <% roles.forEach(role=> { %>
+                                            <option value="<%= role.id %>" <%=config.ticket?.supportRoleId===role.id
+                                                ? 'selected' : '' %> style="color: <%= role.color !=='#000000' ?
+                                                    role.color : '#ffffff' %>;">
+                                                    <%= role.name %>
+                                            </option>
+                                            <% }) %>
+                                    </select>
+                                </div>
+
+                                <!-- Transcript Channel -->
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Transcript
+                                        Channel</label>
+                                    <select name="ticketTranscriptChannelId"
+                                        class="w-full bg-discord-darker text-white p-3 rounded border border-gray-700 focus:border-discord-blurple focus:outline-none">
+                                        <option value="">-- Select Channel --</option>
+                                        <% channels.forEach(channel=> { %>
+                                            <option value="<%= channel.id %>"
+                                                <%=config.ticket?.transcriptChannelId===channel.id ? 'selected' : '' %>
+                                                ># <%= channel.name %>
+                                            </option>
+                                            <% }) %>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Open Category -->
+                            <div class="mt-4">
+                                <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Open Ticket
+                                    Category</label>
+                                <select name="ticketCategoryOpenId"
+                                    class="w-full bg-discord-darker text-white p-3 rounded border border-gray-700 focus:border-discord-blurple focus:outline-none">
+                                    <option value="">-- Create/Select Category --</option>
+                                    <% categories.forEach(cat=> { %>
+                                        <option value="<%= cat.id %>" <%=config.ticket?.categoryOpenId===cat.id
+                                            ? 'selected' : '' %>><%= cat.name %>
+                                        </option>
+                                        <% }) %>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Messages -->
+                        <div class="bg-discord-dark rounded-lg p-6 shadow-md">
+                            <h2 class="text-xl font-bold mb-4 text-white">Messages</h2>
+
+                            <div class="mb-4">
+                                <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Ticket Channel Name
+                                    Template</label>
+                                <input type="text" name="ticketChannelName"
+                                    value="<%= config.ticket?.channelName || 'ticket-{username}' %>"
+                                    class="w-full bg-discord-darker text-white p-3 rounded border border-gray-700 focus:border-discord-blurple focus:outline-none">
+                                <p class="text-xs text-gray-500 mt-1">Variables: {username}, {id}</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Welcome
+                                    Message</label>
+                                <textarea name="ticketWelcomeMessage" rows="3"
+                                    class="w-full bg-discord-darker text-white p-3 rounded border border-gray-700 focus:border-discord-blurple focus:outline-none"><%= config.ticket?.welcomeMessage || 'Hello {user}, staff will be with you shortly.' %></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="flex justify-end pt-4">
+                            <button type="submit"
+                                class="bg-discord-blurple hover:bg-indigo-600 text-white font-bold py-3 px-8 rounded shadow-lg transform active:scale-95 transition">
+                                Save Changes
+                            </button>
+                        </div>
+
+                    </form>
+
+                    <!-- Send Panel Button (Optional Future Feature) -->
+                    <!-- <div class="mt-8 p-4 bg-discord-dark rounded border border-gray-700">
+                <h3 class="font-bold text-white mb-2">Deploy Ticket Panel</h3>
+                <p class="text-gray-400 text-sm mb-4">Click below to send the "Open Ticket" panel to a channel.</p>
+                <button class="bg-green-600 text-white px-4 py-2 rounded font-bold">Send Panel</button>
+            </div> -->
+                </div>
+            </div>
+    </div>
+
+    <%- include('partials/footer') %>

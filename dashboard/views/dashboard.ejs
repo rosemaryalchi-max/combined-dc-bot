@@ -1,0 +1,43 @@
+<%- include('partials/header', { user: user }) %>
+
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-white mb-2">Select a Server</h1>
+        <p class="text-gray-400">Manage settings for servers where you have permission.</p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <% guilds.forEach(guild=> { %>
+            <div
+                class="bg-discord-dark rounded-lg p-6 flex flex-col items-center hover:bg-gray-800 transition duration-200 border border-transparent hover:border-discord-blurple group">
+                <div class="relative mb-4">
+                    <% if (guild.icon) { %>
+                        <img src="https://cdn.discordapp.com/icons/<%= guild.id %>/<%= guild.icon %>.png"
+                            class="w-24 h-24 rounded-full object-cover shadow-md group-hover:scale-110 transition duration-300"
+                            alt="Icon">
+                        <% } else { %>
+                            <div
+                                class="w-24 h-24 rounded-full bg-discord-bg flex items-center justify-center text-2xl font-bold text-gray-500 group-hover:bg-gray-700 transition">
+                                <%= guild.name.substring(0,2).toUpperCase() %>
+                            </div>
+                            <% } %>
+                </div>
+
+                <h3 class="text-xl font-bold text-white text-center mb-4 truncate w-full">
+                    <%= guild.name %>
+                </h3>
+
+                <a href="/dashboard/<%= guild.id %>"
+                    class="mt-auto bg-discord-blurple hover:bg-indigo-600 text-white font-medium py-2 px-6 rounded w-full text-center transition">
+                    Manage
+                </a>
+            </div>
+            <% }); %>
+    </div>
+
+    <% if (guilds.length===0) { %>
+        <div class="text-center text-gray-500 mt-20">
+            <p>No compatible servers found. Make sure you have "Manage Server" permissions.</p>
+        </div>
+        <% } %>
+
+            <%- include('partials/footer') %>

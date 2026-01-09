@@ -1,0 +1,196 @@
+<%- include('partials/header', { user: user }) %>
+
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <%- include('partials/sidebar', { guild: guild, active: active }) %>
+
+            <!-- Content -->
+            <div class="flex-1 p-10 bg-discord-gray">
+                <div class="max-w-4xl mx-auto">
+                    <h1 class="text-3xl font-bold text-white mb-8">Server Overview</h1>
+
+                    <form action="/dashboard/<%= guild.id %>" method="POST" class="space-y-6">
+
+                        <!-- Channels Section -->
+                        <div class="bg-discord-dark rounded-lg p-6 shadow-md border-l-4 border-discord-blurple">
+                            <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                                <span>📢</span> Channels
+                            </h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Log Channel -->
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Logging
+                                        Channel</label>
+                                    <div class="relative">
+                                        <select name="logChannelId"
+                                            class="w-full bg-discord-darker text-white p-3 rounded border border-gray-700 focus:border-discord-blurple focus:outline-none appearance-none cursor-pointer">
+                                            <option value="">-- Disabled --</option>
+                                            <% channels.forEach(c=> { %>
+                                                <option value="<%= c.id %>" <%=config.logChannelId===c.id ? 'selected'
+                                                    : '' %>># <%= c.name %>
+                                                </option>
+                                                <% }) %>
+                                        </select>
+                                        <div
+                                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                                            ▼</div>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1">Audit logs and bot events will be sent here.
+                                    </p>
+                                </div>
+
+                                <!-- Welcome Channel -->
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Welcome
+                                        Channel</label>
+                                    <div class="relative">
+                                        <select name="welcomeChannelId"
+                                            class="w-full bg-discord-darker text-white p-3 rounded border border-gray-700 focus:border-discord-blurple focus:outline-none appearance-none cursor-pointer">
+                                            <option value="">-- Disabled --</option>
+                                            <% channels.forEach(c=> { %>
+                                                <option value="<%= c.id %>" <%=config.welcomeChannelId===c.id
+                                                    ? 'selected' : '' %>>#
+                                                    <%= c.name %>
+                                                </option>
+                                                <% }) %>
+                                        </select>
+                                        <div
+                                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                                            ▼</div>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1">New members will be greeted here.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Ticketing Section -->
+                        <div class="bg-discord-dark rounded-lg p-6 shadow-md border-l-4 border-discord-green">
+                            <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                                <span>🎫</span> Ticket System
+                            </h2>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Support Role -->
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Support Staff
+                                        Role</label>
+                                    <div class="relative">
+                                        <select name="ticketSupportRoleId"
+                                            class="w-full bg-discord-darker text-white p-3 rounded border border-gray-700 focus:border-discord-blurple focus:outline-none appearance-none cursor-pointer">
+                                            <option value="">-- None --</option>
+                                            <% roles.forEach(r=> { %>
+                                                <option value="<%= r.id %>" <%=config.ticket?.supportRoleId===r.id
+                                                    ? 'selected' : '' %>>@<%= r.name %>
+                                                </option>
+                                                <% }) %>
+                                        </select>
+                                        <div
+                                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                                            ▼</div>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1">This role will be pinged in new tickets.</p>
+                                </div>
+
+                                <!-- Transcript Channel -->
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Transcript
+                                        Logs</label>
+                                    <div class="relative">
+                                        <select name="ticketTranscriptChannelId"
+                                            class="w-full bg-discord-darker text-white p-3 rounded border border-gray-700 focus:border-discord-blurple focus:outline-none appearance-none cursor-pointer">
+                                            <option value="">-- None --</option>
+                                            <% channels.forEach(c=> { %>
+                                                <option value="<%= c.id %>" <%=config.ticket?.transcriptChannelId===c.id
+                                                    ? 'selected' : '' %>>#<%= c.name %>
+                                                </option>
+                                                <% }) %>
+                                        </select>
+                                        <div
+                                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                                            ▼</div>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1">Closed ticket logs will be saved here.</p>
+                                </div>
+
+                                <!-- Open Category -->
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Category: New
+                                        Tickets</label>
+                                    <div class="relative">
+                                        <select name="ticketCategoryOpenId"
+                                            class="w-full bg-discord-darker text-white p-3 rounded border border-gray-700 focus:border-discord-blurple focus:outline-none appearance-none cursor-pointer">
+                                            <option value="">-- None --</option>
+                                            <% categories.forEach(c=> { %>
+                                                <option value="<%= c.id %>" <%=config.ticket?.categoryOpenId===c.id
+                                                    ? 'selected' : '' %>>📂 <%= c.name %>
+                                                </option>
+                                                <% }) %>
+                                        </select>
+                                        <div
+                                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                                            ▼</div>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1">Open tickets will be created here.</p>
+                                </div>
+
+                                <!-- Closed Category -->
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Category: Closed
+                                        Tickets</label>
+                                    <div class="relative">
+                                        <select name="ticketCategoryClosedId"
+                                            class="w-full bg-discord-darker text-white p-3 rounded border border-gray-700 focus:border-discord-blurple focus:outline-none appearance-none cursor-pointer">
+                                            <option value="">-- None --</option>
+                                            <% categories.forEach(c=> { %>
+                                                <option value="<%= c.id %>" <%=config.ticket?.categoryClosedId===c.id
+                                                    ? 'selected' : '' %>>📂 <%= c.name %>
+                                                </option>
+                                                <% }) %>
+                                        </select>
+                                        <div
+                                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                                            ▼</div>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1">Closed tickets will be moved here.</p>
+                                </div>
+
+                                <!-- Templates -->
+                                <div class="md:col-span-2">
+                                    <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Channel Name
+                                        Template</label>
+                                    <input type="text" name="ticketChannelName"
+                                        value="<%= config.ticket?.channelName || 'ticket-{username}' %>"
+                                        class="w-full bg-discord-darker text-white p-3 rounded border border-gray-700 focus:border-discord-blurple focus:outline-none"
+                                        placeholder="ticket-{username}">
+                                    <p class="text-xs text-gray-500 mt-1">Use <code>{username}</code> or
+                                        <code>{id}</code>
+                                        variables.
+                                    </p>
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Welcome
+                                        Message</label>
+                                    <textarea name="ticketWelcomeMessage" rows="3"
+                                        class="w-full bg-discord-darker text-white p-3 rounded border border-gray-700 focus:border-discord-blurple focus:outline-none resize-y"><%= config.ticket?.welcomeMessage || 'Hello {user}, staff will be with you shortly.' %></textarea>
+                                    <p class="text-xs text-gray-500 mt-1">Sent when a ticket is opened. Use
+                                        <code>{user}</code> to
+                                        mention.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="flex justify-end pt-4">
+                            <button type="submit"
+                                class="bg-discord-blurple hover:bg-indigo-600 text-white font-bold py-3 px-8 rounded shadow-lg transform active:scale-95 transition">
+                                Save Configuration
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+    </div>
+
+    <%- include('partials/footer') %>

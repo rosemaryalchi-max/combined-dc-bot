@@ -1,0 +1,100 @@
+<%- include('partials/header', { user: user }) %>
+
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <%- include('partials/sidebar', { guild: guild, active: 'welcome' }) %>
+
+            <!-- Content -->
+            <div class="flex-1 p-10">
+                <div class="max-w-4xl mx-auto">
+                    <h1 class="text-3xl font-bold text-white mb-2">Welcome & Goodbye</h1>
+                    <p class="text-gray-400 mb-8">Customize how new members are greeted.</p>
+
+                    <form action="/dashboard/<%= guild.id %>/welcome" method="POST" class="space-y-6">
+
+                        <!-- Welcome Card Settings -->
+                        <div class="bg-discord-dark rounded-lg p-6 shadow-md border-l-4 border-green-500">
+                            <div class="flex items-center justify-between mb-6">
+                                <div>
+                                    <h2 class="text-xl font-bold text-white">Send a welcome card</h2>
+                                    <p class="text-gray-400 text-sm">Send a customized image card when a user joins.</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="cardEnabled" class="sr-only peer"
+                                        <%=config.welcome.card.enabled ? 'checked' : '' %>>
+                                    <div
+                                        class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500">
+                                    </div>
+                                </label>
+                            </div>
+
+                            <!-- Channel Only -->
+                            <div class="mb-6">
+                                <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Welcome
+                                    Channel</label>
+                                <select name="welcomeChannelId"
+                                    class="w-full bg-discord-darker text-white p-3 rounded border border-gray-700 focus:border-discord-blurple focus:outline-none">
+                                    <option value="">-- Disabled --</option>
+                                    <% channels.forEach(c=> { %>
+                                        <option value="<%= c.id %>" <%=config.welcomeChannelId===c.id ? 'selected' : ''
+                                            %>># <%= c.name %>
+                                        </option>
+                                        <% }) %>
+                                </select>
+                            </div>
+
+                            <hr class="border-gray-700 my-6">
+
+                            <!-- Theme Selector -->
+                            <div class="mb-6">
+                                <label class="block text-xs font-bold text-gray-400 uppercase mb-3">Choose your
+                                    theme</label>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <% const themes=['gaming', 'anime' , 'nature' , 'abstract' ]; %>
+                                        <% themes.forEach(t=> { %>
+                                            <label class="cursor-pointer relative">
+                                                <input type="radio" name="cardTheme" value="<%= t %>"
+                                                    class="peer sr-only" <%=config.welcome.card.theme===t ? 'checked'
+                                                    : '' %>>
+                                                <div class="h-24 rounded-lg bg-cover bg-center border-4 border-transparent peer-checked:border-green-500 transition opacity-75 peer-checked:opacity-100"
+                                                    style="background-image: url('/img/themes/<%= t %>.png'), linear-gradient(to right, #434343, #000000);">
+                                                    <!-- Fallback gradient if img missing -->
+                                                </div>
+                                                <span
+                                                    class="absolute bottom-2 left-2 text-white font-bold text-xs uppercase shadow-black drop-shadow-md">
+                                                    <%= t %>
+                                                </span>
+                                            </label>
+                                            <% }) %>
+                                </div>
+                            </div>
+
+                            <!-- Text Fields -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Title</label>
+                                    <input type="text" name="cardTitle" value="<%= config.welcome.card.title %>"
+                                        class="w-full bg-discord-darker text-white p-3 rounded border border-gray-700 focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Text</label>
+                                    <input type="text" name="cardText" value="<%= config.welcome.card.text %>"
+                                        class="w-full bg-discord-darker text-white p-3 rounded border border-gray-700 focus:outline-none">
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="flex justify-end">
+                            <button type="submit"
+                                class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded shadow-lg transition">
+                                Save Changes
+                            </button>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+    </div>
+
+    <%- include('partials/footer') %>

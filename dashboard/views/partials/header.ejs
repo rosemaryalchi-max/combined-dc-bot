@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bot Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        discord: {
+                            bg: '#313338',
+                            dark: '#2b2d31',
+                            darker: '#1e1f22',
+                            blurple: '#5865F2',
+                            green: '#23a559',
+                            red: '#da373c',
+                            text: '#dbdee1'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #313338;
+            color: #dbdee1;
+            font-family: 'GG Sans', 'Segoe UI', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-discord-bg min-h-screen flex flex-col">
+    <!-- Navbar -->
+    <nav class="bg-discord-darker p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="/" class="text-xl font-bold text-white flex items-center gap-2">
+                🤖 <span class="hidden sm:inline">Bot Dashboard</span>
+            </a>
+            <div>
+                <% if (user) { %>
+                    <div class="flex items-center gap-4">
+                        <span class="text-sm font-medium">
+                            <%= user.username %>
+                        </span>
+                        <a href="/logout"
+                            class="bg-discord-red hover:bg-red-700 text-white px-4 py-1.5 rounded transition">Logout</a>
+                    </div>
+                    <% } else { %>
+                        <a href="/login"
+                            class="bg-discord-blurple hover:bg-indigo-600 text-white px-4 py-2 rounded transition">Login</a>
+                        <% } %>
+            </div>
+        </div>
+    </nav>
+    <main class="flex-grow container mx-auto p-6">

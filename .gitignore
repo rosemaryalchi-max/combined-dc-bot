@@ -3,3 +3,17 @@ node_modules/
 .DS_Store
 coverage/
 .vscode/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Runtime Data
+data/
+sessions/
+backups/
+
+# Config
+config.json
+guild_config.json
