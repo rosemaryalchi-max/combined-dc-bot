@@ -1,4 +1,7 @@
 const { Events, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } = require('discord.js');
+const { musicCommands, handleInteractionMusic } = require('../modules/music');
+const { giveawayCommands, handleInteractionGiveaway } = require('../modules/giveaway');
+const { adminCommands, handleInteractionAdmin } = require('../modules/adminUtils');
 
 // Simple in-memory cache for CAPTCHA answers: userId -> answer
 // Note: Clears on restart
@@ -11,16 +14,21 @@ module.exports = {
         if (interaction.isChatInputCommand()) {
             const command = interaction.client.commands.get(interaction.commandName);
 
-            if (!command) {
+            if (command) {
+                try {
+                    await command.execute(interaction);
+                } catch (error) {
+                    console.error(`Error executing ${interaction.commandName}`);
+                    console.error(error);
+                }
+            } else if (musicCommands.find(c => c.name === interaction.commandName)) {
+                await handleInteractionMusic(interaction);
+            } else if (giveawayCommands.find(c => c.name === interaction.commandName)) {
+                await handleInteractionGiveaway(interaction);
+            } else if (adminCommands.find(c => c.name === interaction.commandName)) {
+                await handleInteractionAdmin(interaction);
+            } else {
                 console.error(`No command matching ${interaction.commandName} was found.`);
-                return;
-            }
-
-            try {
-                await command.execute(interaction);
-            } catch (error) {
-                console.error(`Error executing ${interaction.commandName}`);
-                console.error(error);
             }
 
             // Handle Button Interactions

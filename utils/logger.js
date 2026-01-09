@@ -1,4 +1,46 @@
 const { EmbedBuilder } = require('discord.js');
+const fs = require('fs');
+const path = require('path');
+
+// --- CONSOLE / FILE LOGGER (Merged) ---
+const colors = {
+    ok: '\x1b[32m',       // green
+    info: '\x1b[36m',     // cyan
+    warn: '\x1b[33m',     // yellow
+    err: '\x1b[31m',      // red
+    reset: '\x1b[0m',
+};
+
+const ts = () => {
+    const d = new Date();
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+        .toISOString().replace('T', ' ').slice(0, 19);
+};
+
+const logDir = path.join(__dirname, '..', 'logs');
+let jsonStream = null;
+try {
+    fs.mkdirSync(logDir, { recursive: true });
+    jsonStream = fs.createWriteStream(path.join(logDir, 'bot.jsonl'), { flags: 'a' });
+} catch {
+    jsonStream = null;
+}
+
+const out = (level, ...args) => {
+    const color = colors[level] || '';
+    const reset = colors.reset;
+    const tag = level.toUpperCase().padEnd(5, ' ');
+    const fn = level === 'warn' ? console.warn : level === 'err' ? console.error : console.log;
+    fn(`${color}[${ts()}] ${tag}${reset}`, ...args);
+    if (jsonStream) {
+        try {
+            const payload = { ts: ts(), level, msg: args.map(String).join(' ') };
+            jsonStream.write(`${JSON.stringify(payload)}\n`);
+        } catch { }
+    }
+};
+
+// --- DISCORD EMBED LOGGER (Original) ---
 
 /**
  * Logs an action to a specified channel.
@@ -31,4 +73,10 @@ async function sendLog(client, guildId, title, description, color = 'Blue') {
     }
 }
 
-module.exports = { sendLog };
+module.exports = {
+    sendLog,
+    ok: (...a) => out('ok', ...a),
+    info: (...a) => out('info', ...a),
+    warn: (...a) => out('warn', ...a),
+    err: (...a) => out('err', ...a),
+};
